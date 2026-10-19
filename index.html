@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Botes y pelotas · U, V y T</title>
+<style>
+:root{--bg:#f6f8f9;--tx:#1d2b33;--card:#fff;--ln:#9aa9b2;--c:#0f7b7b;--w:#c2410c;--ok:#15803d;--bad:#b91c1c;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12191d;--tx:#e6edf0;--card:#1b262c;--ln:#5d707a;--c:#4fc3c3;--w:#fb923c;--ok:#4ade80;--bad:#f87171;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12191d;--tx:#e6edf0;--card:#1b262c;--ln:#5d707a;--c:#4fc3c3;--w:#fb923c;--ok:#4ade80;--bad:#f87171;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:1.1rem/1.5 "Trebuchet MS",sans-serif;padding:1rem;-webkit-user-select:none;user-select:none}
+main{max-width:40rem;margin:auto}
+h1{font:bold 1.5rem Georgia,serif;margin:.2rem 0 .6rem}
+.tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.8rem}
+button{font:inherit;cursor:pointer;border:2px solid var(--c);background:var(--card);color:var(--tx);border-radius:.6rem;padding:.45rem .8rem;min-height:2.8rem}
+button.on,button.pri{background:var(--c);color:#fff}
+.sc{font-size:.95rem;color:var(--ln);margin:.2rem 0 .6rem}
+.chips{display:flex;gap:.5rem;margin:.3rem 0}
+.chip{flex:1;text-align:center;background:var(--card);border:2px solid var(--ln);border-radius:.6rem;padding:.3rem;font-weight:bold}
+.chip.q{border-color:var(--w);color:var(--w);border-style:dashed}
+.chip small{display:block;font-weight:normal;font-size:.8rem;color:var(--ln)}
+.card{background:var(--card);border-left:6px solid var(--c);border-radius:.5rem;padding:.7rem 1rem;margin:.7rem 0}
+.card.w{border-color:var(--w)}
+.t{width:1.7rem;height:1.7rem;display:block}
+.t[data-src]{touch-action:none;cursor:grab}
+.ghost{position:fixed;pointer-events:none;z-index:9;width:2rem;height:2rem}
+.pool{display:flex;flex-wrap:wrap;gap:.1rem;border:2px dashed var(--ln);border-radius:.6rem;padding:.4rem;min-height:3.2rem;margin:.5rem 0}
+.pool .sc{margin:0;align-self:center}
+.row{display:flex;flex-wrap:wrap;gap:.9rem;align-items:flex-end;margin:.8rem 0 .4rem}
+.can{position:relative;margin-top:.8rem;min-height:3rem;width:3.3rem;display:flex;flex-direction:column-reverse;align-items:center;border:2px solid var(--c);border-top:0;border-radius:.2rem .2rem .9rem .9rem;padding:.4rem 0 .3rem;background:linear-gradient(90deg,rgba(15,123,123,.24),rgba(15,123,123,.04) 45%,rgba(15,123,123,.24))}
+.can i{position:absolute;top:-.7rem;left:-.3rem;right:-.3rem;height:.75rem;background:var(--c);border-radius:.4rem .4rem .15rem .15rem}
+
+.newc{width:3.3rem;height:4rem;border:2px dashed var(--ln);border-radius:.6rem;display:flex;align-items:center;justify-content:center;text-align:center;font-size:.8rem;line-height:1.2;color:var(--ln);cursor:pointer}
+.ctl{display:flex;gap:.5rem;flex-wrap:wrap;margin:.5rem 0}
+.ans{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.ans output{font:bold 2rem Georgia,serif;min-width:2.5rem;text-align:center}
+.msg{font-weight:bold;margin:.5rem 0}
+.msg.ok{color:var(--ok)}.msg.bad{color:var(--bad)}
+.eq{font:bold 1.5rem Georgia,serif;margin:.3rem 0}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="tb" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#d7e84a" stroke="#8a9a1a"/><path d="M3 4.5Q8 10 3 15.5M17 4.5Q12 10 17 15.5" fill="none" stroke="#fff" stroke-width="1.6"/></symbol>
+</defs></svg>
+<main>
+<h1>🎾 Botes y pelotas</h1>
+<div class="tabs" id="tabs"></div>
+<div class="sc" id="sc"></div>
+<div id="app"></div>
+</main>
+<script>
+var S={lv:1,lt:{},ord:[],mode:'mix',ok:0,streak:0,ch:null,c:[],pool:0,ans:1,done:false,msg:'',bad:false,note:''};
+var $=function(i){return document.getElementById(i)};
+var NM={T:'Pelotas en total',U:'Pelotas en cada bote',V:'Botes'};
+function R(a,b){return a+Math.floor(Math.random()*(b-a+1))}
+function ball(n,s){var o='',i;for(i=0;i<n;i++)o+='<svg class="t"'+(s===null?'':' data-src="'+s+'"')+'><use href="#tb"/></svg>';return o}
+function setMode(m){S.mode=m;S.lv=m=='sl'?2:1;next()}
+function pk(k,l){if(S.done)return;S.lt[k]=l;draw()}
+function idc(v,q){return '<div class="card w"><p style="margin:0 0 .4rem">¿Qué letra (U, V o T) corresponde a cada dato?</p>'+S.ord.map(function(k){return '<div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin:.3rem 0"><span style="flex:1;min-width:9rem">'+NM[k]+': <b>'+(k==q?'?':v[k])+'</b></span>'+['U','V','T'].map(function(l){return '<button class="'+(S.lt[k]==l?'on':'')+'" onclick="pk(\''+k+'\',\''+l+'\')">'+l+'</button>'}).join('')+'</div>'}).join('')+'</div>'}
+function lc(){return S.lv==1?'':'<p style="margin:.2rem 0">'+(S.rL?'✓':'✗')+' Letras'+(S.rL?'':': '+['T','U','V'].map(function(k){return k+' = '+NM[k]}).join(', '))+'</p>'}
+function init(){var h=S.ch,i;S.c=[];S.pool=h.T;S.note='';
+if(h.m=='u')for(i=0;i<h.V;i++)S.c.push(0);
+if(h.m=='t'){for(i=0;i<h.V;i++)S.c.push(h.U);S.pool=0}}
+function next(){
+var m=S.mode=='mix'||S.mode=='sl'?['u','v','t'][R(0,2)]:S.mode,U=R(2,Math.min(7,5+Math.floor(S.ok/3))),V=R(2,Math.min(10,7+Math.floor(S.ok/2)));
+S.ch={m:m,U:U,V:V,T:U*V};S.done=false;S.lt={};S.ord=['T','U','V'].sort(function(){return Math.random()-.5});S.msg='';S.ans=0;init();draw()}
+function move(f,j){var h=S.ch;
+
+if(f<0){if(S.pool<=0)return;S.pool--}else{if(S.c[f]<=0)return;S.c[f]--}
+S.c[j]++}
+function drop(s,el){var h=S.ch,f=s=='p'?-1:+s,t=el&&el.closest?el.closest('[data-can],#pool,#newc'):null;S.note='';
+if(t){if(t.id=='pool'){if(f>=0){S.c[f]--;S.pool++}}
+else if(t.id=='newc'){S.c.push(0);move(f,S.c.length-1)}
+else if(+t.dataset.can!=f)move(f,+t.dataset.can)}
+draw()}
+var D=null;
+function mv(e){if(D){D.g.style.left=e.clientX-16+'px';D.g.style.top=e.clientY-16+'px'}}
+document.addEventListener('pointerdown',function(e){var b=e.target.closest&&e.target.closest('.t[data-src]');if(!b||S.done||D)return;
+e.preventDefault();var g=b.cloneNode(true);g.removeAttribute('data-src');g.setAttribute('class','ghost');document.body.appendChild(g);
+D={s:b.dataset.src,g:g};b.style.opacity=.3;mv(e)});
+document.addEventListener('pointermove',mv);
+document.addEventListener('pointerup',function(e){if(!D)return;var el=document.elementFromPoint(e.clientX,e.clientY),s=D.s;D.g.remove();D=null;drop(s,el)});
+document.addEventListener('pointercancel',function(){if(D){D.g.remove();D=null;draw()}});
+function addCan(){if(!S.done){S.c.push(0);S.note='';draw()}}
+function delCan(){if(S.done||!S.c.length)return;S.pool+=S.c.pop();S.note='';draw()}
+function reset(){init();S.msg='';draw()}
+function st(d){S.ans=Math.max(0,Math.min(99,S.ans+d));$('an').textContent=S.ans||'?'}
+function chk(){var h=S.ch,m=h.m,e=m=='u'?h.U:m=='v'?h.V:h.T,c0=S.c[0];
+S.rA=S.ans==e;
+S.rB=m=='u'?(S.pool==0&&S.c.every(function(x){return x==c0})):m=='v'?(S.pool==0&&S.c.length==h.V&&S.c.every(function(x){return x==h.U})):null;
+S.rL=['T','U','V'].every(function(k){return S.lt[k]==k});S.done=true;if(S.rA&&S.rB!==false&&(S.lv==1||S.rL)){S.ok++;S.streak++}else S.streak=0;draw()}
+function fin(o,h,m,q){var e=m=='u'?h.U:m=='v'?h.V:h.T,a=S.rA,b=S.rB,good=a&&b!==false&&(S.lv==1||S.rL);
+o+=(S.lv==2&&!S.done?idc({U:h.U,V:h.V,T:h.T},q):'')+'<div class="card w">';
+if(!S.done)o+='<p style="margin:0 0 .4rem">'+(S.lv==1?'¿Cuánto vale <b>'+q+'</b>?':'Tu respuesta:')+''+(m=='u'?' (pelotas en cada bote)':m=='v'?' (número de botes)':' (total de pelotas)')+'</p><div class="ans"><button onclick="st(-1)" aria-label="menos">−</button><output id="an">'+(S.ans||'?')+'</output><button onclick="st(1)" aria-label="más">+</button><button class="pri" onclick="chk()">Terminar</button></div><p class="sc">Cuando creas que lo tienes, escribe la respuesta y pulsa Terminar.</p>';
+else{o+='<p class="msg '+(good?'ok':'bad')+'">'+(good?'¡Muy bien!':'Esta vez no ha salido. Fíjate en la explicación.')+'</p>';
+if(b!==null)o+='<p style="margin:.2rem 0">'+(b?'✓':'✗')+' Reparto de las pelotas'+(b?'':m=='u'?': no hay las mismas en cada bote, o quedan pelotas sueltas':': tendría que haber '+h.V+' botes con '+h.U+' pelotas cada uno')+'</p>';
+o+=lc()+'<p style="margin:.2rem 0">'+(a?'✓':'✗')+' Respuesta: '+q+' = '+e+(a?'':' (tú pusiste '+(S.ans||'nada')+')')+'</p><div class="eq">U × V = T → '+h.U+' × '+h.V+' = '+h.T+'</div><p style="margin:.2rem 0">'+h.V+' botes de '+h.U+' pelotas, '+h.T+' pelotas en total.</p>'+(m=='t'?'':'<p style="margin:.2rem 0">'+(m=='u'?h.T+' ÷ '+h.V+' = '+h.U:h.T+' ÷ '+h.U+' = '+h.V)+' porque '+h.U+' × '+h.V+' = '+h.T+'.</p>')+'<div class="row">'+Array(h.V+1).join('<span class="can"><i></i>'+ball(h.U,null)+'</span>')+'</div><div class="ctl"><button class="pri" onclick="next()">Siguiente ▶</button></div>'}
+$('app').innerHTML=o+'</div>';
+$('tabs').innerHTML=[['mix','🎲 Mezcla'],['u','Busca U'],['v','Busca V'],['t','Busca T'],['sl','🔍 Sin letras']].map(function(x){return '<button class="'+(S.mode==x[0]?'on':'')+'" onclick="setMode(\''+x[0]+'\')">'+x[1]+'</button>'}).join('');
+$('sc').textContent='Aciertos: '+S.ok+' · Racha: '+S.streak}
+function draw(){var h=S.ch,m=h.m,q={u:'U',v:'V',t:'T'}[m],o='',ready=false,hint=S.note,vals={U:h.U,V:h.V,T:h.T};
+if(S.lv==1||S.done)o+='<div class="chips">'+['T','U','V'].map(function(k){return '<div class="chip'+(k==q?' q':'')+'"><small>'+{T:'total de pelotas',U:'pelotas por bote',V:'botes'}[k]+'</small>'+k+' = '+(k==q&&!S.done?'?':vals[k])+'</div>'}).join('')+'</div>';
+var pool='<div class="pool" id="pool">'+(S.pool?ball(S.pool,'p'):'<span class="sc">'+(m=='t'?'Mesa: aquí van las pelotas que saques':'Pelotas sueltas')+'</span>')+'</div>';
+var row='<div class="row">'+S.c.map(function(x,j){return '<span class="can" data-can="'+j+'"><i></i>'+ball(x,j)+'</span>'}).join('')+(m=='v'?'<span class="newc" id="newc" onclick="addCan()">+<br>bote<br>nuevo</span>':'')+'</div>';
+o+='<div class="card"><p style="margin:0">'+({u:'Reparte las '+h.T+' pelotas entre los '+h.V+' botes. <b>Arrastra</b> las pelotas a los botes: tiene que haber las mismas en cada uno.',v:'Tienes '+h.T+' pelotas y en cada bote van '+h.U+'. <b>Arrastra</b> las pelotas para ir llenando botes; arrastra una al recuadro «bote nuevo» para añadir otro. ¿Cuántos botes necesitas?',t:'Hay '+h.V+' botes con '+h.U+' pelotas en cada uno. <b>Saca las pelotas</b> arrastrándolas a la mesa y cuéntalas.'})[m]+'</p>';
+o+=m=='t'?row+pool:pool+row;
+if(!S.done){o+='<div class="ctl">'+(m=='v'?'<button onclick="delCan()">Quitar bote</button>':'')+'<button onclick="reset()">Empezar de nuevo</button></div>'}
+o+='</div>';
+return fin(o,h,m,q);
+if(m=='u'&&S.pool==0){if(S.c.every(function(x){return x==S.c[0]}))ready=true;else hint='Los botes no tienen las mismas pelotas. Cambia algunas de bote.'}
+if(m=='v'&&S.pool==0){if(!S.c.length)hint='Empieza arrastrando una pelota al bote nuevo.';else if(S.c.every(function(x){return x==h.U}))ready=true;else if(!hint)hint='Hay botes sin llenar.'}
+if(m=='t'){if(S.pool==h.T)ready=true;else if(!hint)hint='Saca todas las pelotas de los botes.'}
+if(hint&&!S.done)o+='<p class="sc">'+hint+'</p>';
+if(ready||S.done){o+='<div class="card w"><p style="margin:0 0 .4rem">'+(S.lv==1?'¿Cuánto vale <b>'+q+'</b>?':'Tu respuesta:')+''+(m=='u'?' (pelotas en cada bote)':m=='v'?' (número de botes)':' (total de pelotas)')+'</p><div class="ans">';
+if(!S.done)o+='<button onclick="st(-1)" aria-label="menos">−</button><output id="an">'+S.ans+'</output><button onclick="st(1)" aria-label="más">+</button><button class="pri" onclick="chk()">Comprobar</button>';
+o+='</div>';
+if(S.msg)o+='<p class="msg '+(S.bad?'bad':'ok')+'">'+S.msg+'</p>';
+if(S.done)o+='<div class="eq">U × V = T → '+h.U+' × '+h.V+' = '+h.T+'</div><p style="margin:.2rem 0">'+h.V+' botes de '+h.U+' pelotas, '+h.T+' pelotas en total.</p>'+(m=='t'?'':'<p style="margin:.2rem 0">'+(m=='u'?h.T+' ÷ '+h.V+' = '+h.U:h.T+' ÷ '+h.U+' = '+h.V)+' porque '+h.U+' × '+h.V+' = '+h.T+'.</p>')+'<div class="ctl"><button class="pri" onclick="next()">Siguiente ▶</button></div>';
+o+='</div>'}
+$('app').innerHTML=o;
+$('tabs').innerHTML=[['mix','🎲 Mezcla'],['u','Busca U'],['v','Busca V'],['t','Busca T'],['sl','🔍 Sin letras']].map(function(x){return '<button class="'+(S.mode==x[0]?'on':'')+'" onclick="setMode(\''+x[0]+'\')">'+x[1]+'</button>'}).join('');
+$('sc').textContent='Aciertos: '+S.ok+' · Racha: '+S.streak}
+next();
+</script>
+</body></html>
