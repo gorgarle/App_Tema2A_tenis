@@ -60,8 +60,10 @@ function lc(){return S.lv==1?'':'<p style="margin:.2rem 0">'+(S.rL?'✓':'✗')+
 function init(){var h=S.ch,i;S.c=[];S.pool=h.T;S.note='';
 if(h.m=='u')for(i=0;i<h.V;i++)S.c.push(0);
 if(h.m=='t'){for(i=0;i<h.V;i++)S.c.push(h.U);S.pool=0}}
+var H=[];
+function pair(f){var r,k,i=0;do{r=f();k=r[0]+'x'+r[1];i++}while((H.indexOf(k)>=0||r[0]==r[1])&&i<40);H.push(k);if(H.length>10)H.shift();return r}
 function next(){
-var m=S.mode=='mix'||S.mode=='sl'?['u','v','t'][R(0,2)]:S.mode,U=R(2,Math.min(7,5+Math.floor(S.ok/3))),V=R(2,Math.min(10,7+Math.floor(S.ok/2)));
+var m=S.mode=='mix'||S.mode=='sl'?['u','v','t'][R(0,2)]:S.mode,r=pair(function(){return [R(2,9),R(2,9)]}),U=r[0],V=r[1];
 S.ch={m:m,U:U,V:V,T:U*V};S.done=false;S.lt={};S.ord=['T','U','V'].sort(function(){return Math.random()-.5});S.msg='';S.ans=0;init();draw()}
 function move(f,j){var h=S.ch;
 
@@ -93,7 +95,7 @@ o+=(S.lv==2&&!S.done?idc({U:h.U,V:h.V,T:h.T},q):'')+'<div class="card w">';
 if(!S.done)o+='<p style="margin:0 0 .4rem">'+(S.lv==1?'¿Cuánto vale <b>'+q+'</b>?':'Tu respuesta:')+''+(m=='u'?' (pelotas en cada bote)':m=='v'?' (número de botes)':' (total de pelotas)')+'</p><div class="ans"><button onclick="st(-1)" aria-label="menos">−</button><output id="an">'+(S.ans||'?')+'</output><button onclick="st(1)" aria-label="más">+</button><button class="pri" onclick="chk()">Terminar</button></div><p class="sc">Cuando creas que lo tienes, escribe la respuesta y pulsa Terminar.</p>';
 else{o+='<p class="msg '+(good?'ok':'bad')+'">'+(good?'¡Muy bien!':'Esta vez no ha salido. Fíjate en la explicación.')+'</p>';
 if(b!==null)o+='<p style="margin:.2rem 0">'+(b?'✓':'✗')+' Reparto de las pelotas'+(b?'':m=='u'?': no hay las mismas en cada bote, o quedan pelotas sueltas':': tendría que haber '+h.V+' botes con '+h.U+' pelotas cada uno')+'</p>';
-o+=lc()+'<p style="margin:.2rem 0">'+(a?'✓':'✗')+' Respuesta: '+q+' = '+e+(a?'':' (tú pusiste '+(S.ans||'nada')+')')+'</p><div class="eq">U × V = T → '+h.U+' × '+h.V+' = '+h.T+'</div><p style="margin:.2rem 0">'+h.V+' botes de '+h.U+' pelotas, '+h.T+' pelotas en total.</p>'+(m=='t'?'':'<p style="margin:.2rem 0">'+(m=='u'?h.T+' ÷ '+h.V+' = '+h.U:h.T+' ÷ '+h.U+' = '+h.V)+' porque '+h.U+' × '+h.V+' = '+h.T+'.</p>')+'<div class="row">'+Array(h.V+1).join('<span class="can"><i></i>'+ball(h.U,null)+'</span>')+'</div><div class="ctl"><button class="pri" onclick="next()">Siguiente ▶</button></div>'}
+o+=lc()+'<p style="margin:.2rem 0">'+(a?'✓':'✗')+' Respuesta: '+q+' = '+e+(a?'':' (tú pusiste '+(S.ans||'nada')+')')+'</p><div class="eq">'+(m=='t'?'T = U × V → '+h.U+' × '+h.V+' = '+h.T:m=='u'?'U = T ÷ V → '+h.T+' ÷ '+h.V+' = '+h.U:'V = T ÷ U → '+h.T+' ÷ '+h.U+' = '+h.V)+'</div><p style="margin:.2rem 0">'+h.V+' botes de '+h.U+' pelotas, '+h.T+' pelotas en total.</p>'+(m=='t'?'':'<p style="margin:.2rem 0">Comprobación con la multiplicación: U × V = T → '+h.U+' × '+h.V+' = '+h.T+'.</p>')+'<div class="row">'+Array(h.V+1).join('<span class="can"><i></i>'+ball(h.U,null)+'</span>')+'</div><div class="ctl"><button class="pri" onclick="next()">Siguiente ▶</button></div>'}
 $('app').innerHTML=o+'</div>';
 $('tabs').innerHTML=[['mix','🎲 Mezcla'],['u','Busca U'],['v','Busca V'],['t','Busca T'],['sl','🔍 Sin letras']].map(function(x){return '<button class="'+(S.mode==x[0]?'on':'')+'" onclick="setMode(\''+x[0]+'\')">'+x[1]+'</button>'}).join('');
 $('sc').textContent='Aciertos: '+S.ok+' · Racha: '+S.streak}
@@ -114,7 +116,7 @@ if(ready||S.done){o+='<div class="card w"><p style="margin:0 0 .4rem">'+(S.lv==1
 if(!S.done)o+='<button onclick="st(-1)" aria-label="menos">−</button><output id="an">'+S.ans+'</output><button onclick="st(1)" aria-label="más">+</button><button class="pri" onclick="chk()">Comprobar</button>';
 o+='</div>';
 if(S.msg)o+='<p class="msg '+(S.bad?'bad':'ok')+'">'+S.msg+'</p>';
-if(S.done)o+='<div class="eq">U × V = T → '+h.U+' × '+h.V+' = '+h.T+'</div><p style="margin:.2rem 0">'+h.V+' botes de '+h.U+' pelotas, '+h.T+' pelotas en total.</p>'+(m=='t'?'':'<p style="margin:.2rem 0">'+(m=='u'?h.T+' ÷ '+h.V+' = '+h.U:h.T+' ÷ '+h.U+' = '+h.V)+' porque '+h.U+' × '+h.V+' = '+h.T+'.</p>')+'<div class="ctl"><button class="pri" onclick="next()">Siguiente ▶</button></div>';
+if(S.done)o+='<div class="eq">'+(m=='t'?'T = U × V → '+h.U+' × '+h.V+' = '+h.T:m=='u'?'U = T ÷ V → '+h.T+' ÷ '+h.V+' = '+h.U:'V = T ÷ U → '+h.T+' ÷ '+h.U+' = '+h.V)+'</div><p style="margin:.2rem 0">'+h.V+' botes de '+h.U+' pelotas, '+h.T+' pelotas en total.</p>'+(m=='t'?'':'<p style="margin:.2rem 0">Comprobación con la multiplicación: U × V = T → '+h.U+' × '+h.V+' = '+h.T+'.</p>')+'<div class="ctl"><button class="pri" onclick="next()">Siguiente ▶</button></div>';
 o+='</div>'}
 $('app').innerHTML=o;
 $('tabs').innerHTML=[['mix','🎲 Mezcla'],['u','Busca U'],['v','Busca V'],['t','Busca T'],['sl','🔍 Sin letras']].map(function(x){return '<button class="'+(S.mode==x[0]?'on':'')+'" onclick="setMode(\''+x[0]+'\')">'+x[1]+'</button>'}).join('');
